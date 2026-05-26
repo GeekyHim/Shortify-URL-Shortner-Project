@@ -96,15 +96,15 @@ Return Short URL
 
 ```text
 GET /{shortCode}
-↓
+        ↓
 Check Redis Cache
-↓
+        ↓
 Cache Hit -> Redirect
-↓
+        ↓
 Cache Miss -> PostgreSQL Lookup
-↓
+        ↓
 Store in Redis
-↓
+        ↓
 Redirect User
 ```
 
