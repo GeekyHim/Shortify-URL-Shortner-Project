@@ -1,9 +1,15 @@
 package com.geekyhim.shortify.util;
 
+import java.security.SecureRandom;
+
 public class Base62Encoder {
 
     private static final String BASE62 =
             "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+    private static final SecureRandom random = new SecureRandom();
+
+    private static final int RANDOM_PART_LENGTH = 2;
 
     public static String encode(long value) {
 
@@ -15,5 +21,16 @@ public class Base62Encoder {
         }
 
         return sb.reverse().toString();
+    }
+
+    public static String generateRandomPrefix() {
+
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < RANDOM_PART_LENGTH; i++) {
+            sb.append(BASE62.charAt(random.nextInt(BASE62.length())));
+        }
+
+        return sb.toString();
     }
 }

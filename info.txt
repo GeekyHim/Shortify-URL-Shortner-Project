@@ -1,0 +1,12 @@
+run redis
+docker run --name redis-shortify -p 6379:6379 -d redis
+
+check redis
+docker ps
+
+redis cli
+docker exec -it redis-shortify redis-cli
+
+PING - check status
+
+GET url_counter - current counter val

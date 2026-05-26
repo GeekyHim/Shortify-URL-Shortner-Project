@@ -30,7 +30,9 @@ public class UrlService {
         Long counter = redisTemplate.opsForValue()
                 .increment("url_counter");
 
-        String shortCode = Base62Encoder.encode(counter);
+        String shortCode =
+                Base62Encoder.generateRandomPrefix()
+                        + Base62Encoder.encode(counter);
 
         url.setShortCode(shortCode);
 
@@ -52,23 +54,47 @@ public class UrlService {
 
     public String getOriginalUrl(String shortCode) {
 
+        String redisKey = "short:" + shortCode;
+
+        // STEP 1: Check Redis cache
+
+        String cachedUrl = redisTemplate.opsForValue().get(redisKey);
+
+        // TODO:
+        // Move analytics updates to async event processing
+        // currently i am letting incorrect analytics for speed
+        // for accurate tracking without impacting redirect latency
+        if (cachedUrl != null) {
+
+            System.out.println("Cache HIT");
+
+            return cachedUrl;
+        }
+
+        System.out.println("Cache MISS");
+
+        // STEP 2: Fetch from DB
         Url url = urlRepository.findByShortCode(shortCode)
                 .orElseThrow(() ->
                         new RuntimeException("Short URL not found"));
 
-        // Expiry check
+        // STEP 3: Expiry validation
         if (url.getExpiryDate() != null &&
                 url.getExpiryDate().isBefore(LocalDateTime.now())) {
 
             throw new RuntimeException("Short URL has expired");
         }
 
-        // Analytics update
+        // STEP 4: Analytics update
         url.setClickCount(url.getClickCount() + 1);
 
         url.setLastAccessedAt(LocalDateTime.now());
 
         urlRepository.save(url);
+
+        // STEP 5: Store in Redis cache
+        redisTemplate.opsForValue()
+                .set(redisKey, url.getOriginalUrl());
 
         return url.getOriginalUrl();
     }
